@@ -1,0 +1,253 @@
+\documentclass[11pt, a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{hyperref}
+\usepackage[frenchb]{babel}
+
+\begin{document}
+
+\title{Gestion de scene pour le moteur 2D}
+\author{EPonix}
+\date{6 juin 2013}
+
+\maketitle
+
+\tableofcontents
+\newpage
+
+\section{Position}
+Il y a trois coordonnée de positionnement.
+Les deux coordonnées (x et y) sont sur le plan du sol et sont à valeur discrete et représente la taille d'un pixel (si aucune projection n'est faite).
+La coordonnée de profondeur est à valeur discrète également mais ne sert qu'à l'affichage pour savoir dans quelle ordre afficher les éléments.
+
+\subsection{Informations}
+\begin{description}
+\item[Entier] x
+\item[Entier] y
+\item[Entier positif] depth\footnote{0 correspond au niveau du sol}
+\end{description}
+
+\subsection{Actions}
+\begin{description}
+\item[Modifier] x
+\item[Modifier] y
+\item[Modifier] depth
+\end{description}
+
+\subsection{Logiciel}
+Vide
+%\begin{itemize}
+%\end{itemize}
+
+\section{Node}
+Un node est un élément de base de la scène.
+
+Il contient ses propres informations géométrique telles que sa position, sa rotation et son échelle.
+On peut alors le transformer grâce aux transformations de base :
+ translation\footnote{La translation sur x et y est libre mais la translation sur z n'influe pas sur la réel altitude du node, seulement sur son ordre d'affichage.},
+ rotation\footnote{seul la rotation sur l'axe Z de la profondeur est géré pour rester dans un espace 2D}
+et mise à l'échelle\footnote{la mise à l'échelle sur l'axe Z n'est pas possible pour la meme raison que la rotation}.
+
+Un node peut posséder des enfants nodes. Les enfants de node auront alors en plus de leur propre transformation locale, la transformation du parent. La relation parent-enfant est bidirectionnel donc un node possède également un parent. Le parent d'un node peut ne pas etre définit. Cela signifie que ce node est la racine de la scène.
+
+Les nodes seront utilisés par le moteur graphique et le moteur physique en meme temps. C'est donc une ressource critique. Un node possède donc également un mutex de protection.
+
+\subsection{Informations}
+\begin{description}
+\item[Transformation] transformation locale
+\item[Ensemble de Node] liste des enfants
+\item[Node] parent
+\item[Mutex] protection
+\end{description}
+
+\subsection{Actions}
+\begin{description}
+\item[Appliquer] une transformation t
+\item[Appliquer] une rotation d'angle a (en radian)
+\item[Appliquer] une translation de vecteur v
+\item[Appliquer] une mise à l'échelle sur x de sx et sur y de sy
+\item[Récupérer] la liste des enfants
+\item[Modifier] le parent
+\item[Supprimer] le parent
+\item[Protéger] les accès multithread du node
+\item[Libérer] les accès multithread du node
+\end{description}
+
+\subsection{Logiciel}
+%\begin{itemize}
+%\end{itemize}
+Vide
+
+\section{Node de caméra}
+Correspond à un node représentant une caméra. Une caméra est une fenetre de visualisation de la scène. Elle contient les meme informations que le node\footnote{Par héritage dans la programmation}.
+
+La caméra a un point d'attache ainsi qu'une focale. Elle n'a pas de point de vision car elle est toujours orienté sur l'axe vertical Z. Entre les Z+ et les Z-, la caméra est orienté vers les Z-\footnote{mieux vaut voir le sol que d'etre tete en l'air}.
+La mise a l'échelle de la caméra est ignoré par celle-ci (aucun changement sur l'aspect graphique et encore moins sur l'aspect physique).
+
+L'affichage se fait à travers les caméras. Les entités visibles\footnote{Détection par culling grâce à un quadtree et le graphe de scène} depuis la caméra sont projeté sur elle puis envoyé au moteur de rendu.
+
+\subsection{Informations}
+\begin{description}
+\item[Position] point d'attache\footnote{C'est la meme chose que la position du node reçu par héritage}
+\item[Scalaire] focale
+\end{description}
+
+\subsection{Actions}
+\begin{description}
+\item[Modifier] le point d'attache
+\item[Modifier] la focale
+\end{description}
+
+\subsection{Logiciel}
+%\begin{itemize}
+%\end{itemize}
+Vide
+
+\section{Node de fenetre de vision}
+C'est un node qui va de pair avec la caméra puisqu'il correspond à un node d'écran.
+C'est à dire que si il y a des caméras pour filmer, il faut également des écrans pour afficher le résultat d'une caméra.
+
+Ce node contient donc une référence vers la caméra auquel il est branché ainsi qu'une taille.
+Le jeu peut donc se voir avec une fenetre ayant comme caméra, une qui a une focale de 1.0. Une minimap correspondra alors à une autre fenetre de visualisation ayant comme caméra, une centré sur toute la carte (dans le cas d'un STR) et ayant une distance focale suffisament petite pour pouvoir voir toute la carte.
+
+Le node de fenetre contient également toutes les informations et les actions du node de base.
+
+\subsection{Informations}
+\begin{description}
+\item[Node de camera] caméra
+\item[Taille] dimension de la fenetre
+\end{description}
+
+\subsection{Actions}
+\begin{description}
+\item[Modifier] la caméra
+\item[Modifier] la dimension
+\end{description}
+
+\subsection{Logiciel}
+%\begin{itemize}
+%\end{itemize}
+Vide
+
+\section{Node de lumière}
+Ce type de node a toute les caractéristiques qu'à le node de base.
+
+Ce node correspond à la lumière dans la scène. Il y a en tout 4 types de lumières différentes\footnote{Cela pourra se traduire par de l'héritage au niveau du code}.
+
+Le premier type est la lumière ambiante. Elle agit sur toute la scène, qu'il y ait des mur ou non.
+
+Le second type est la lumière unidirectionnelle. Les rayons lumineux sont tous parallèles et vont tous dans la meme direction.
+Cela permet de représenter les rayons solaires.
+
+Le troisième type est la lumière en spot. Elle envoie des rayons lumineux dans une forme de cône.
+
+Le dernier type est la lumière omnidirectionnelle comme une lampe normale. Elle envoie les rayons lumineux tout autour d'elle.
+
+Le moteur est en deux dimensions, pourtant pour les lumières, il aurait été bien d'intégré une troisième dimension afin d'avoir des effets de profondeur avec la lumière. Il aurait alors été possible de pouvoir dire que le Z dans la position de la lumière représente vraiment l'altitude et que le Z des autres objets est 0\footnote{Puisque tous les nodes sont plaqués sur le sol pour l'affichage}. Cependant, cela rendrait mal dans certain cas d'utilisation. Par exemple, si il y a un fossé dans la scène avec un source lumineuse qui n'est pas totalement au dessus du fossé, alors normalement il y aurait de l'ombre en fond. Mais il aurait du y avoir une prise en compte de l'altitude du sol et du fossé. C'est possible de simuler ça en plaçant des murs pour la lumières ayant une certaine hauteur mais cela reviendrait au meme que créer un décor en 3D.
+La lumière sera donc mis au niveau du sol et sont impact ne varira pas selon Z. Seul le pland'affichage aura une incidence du l'intensité décroissante de la lumière.
+
+Une lumière a une intensité ainsi qu'un rayon d'action. A l'emplacement de la source, l'intensité de la lumière est au maximum et décroit progressivement jusqu'à atteindre le rayon d'action. La loi de décroissance de l'intensité est une simple loi proportionelle\footnote{Il faudra effectuer des tests pour vérifier si il n'y a pas l'intégration d'autres lois}.
+
+Dans le cas d'un soleil, le rayon d'action peut etre défini avec un nombre très grand devant la taille de la scène. De cette façon, la décroissance de l'intensité n'est pas visible.
+
+La lumière possède également une teinte pour pouvoir simuler différents types de lumière (feu, lampe, couché de soleil, UV, ...).
+
+\subsection{Informations}
+\begin{description}
+\item[Scalaire] intensité
+\item[Longueur] rayon d'action
+\item[Couleur] teinte
+\end{description}
+
+\subsection{Actions}
+\begin{description}
+\item[Modifier] l'intensité
+\item[Modifier] le rayon d'action
+\item[Modifier] la teinte
+\end{description}
+
+\subsection{Logiciel}
+%\begin{itemize}
+%\end{itemize}
+Vide
+
+\section{Node de mur de lumière}
+Ce type de node a toute les caractéristiques qu'à le node de base.
+
+Avec l'intégration de la lumière, il faut également intégrer des mur pour éviter que la lumière puisse passer partout. Les autres nodes n'ont aucune sémentique d'obstacle à la lumière. Et meme si il y a des nodes pour la collision physique, cela n'a pas de rapport avec les obstacles pour la lumière.
+
+Les murs de lumières sont représenté par une ligne et ont une hauteur infini toujours en accord avec le fait que le moteur n'ai que 2 dimensions.
+La position du mur représente donc le centre du mur et la longueur du mur est représenté par sa mise à l'échelle sur X. La taille du mur sur Y est toujours 0.
+La rotation locale du mur permet de faire correpondre de X local du mur avec le Y global.
+
+Le mur possède également un taux de filtre. Si ce taux est à 1.0, alors toute la lumière est bloqué. Si il est à 0.0, alors toute la lumière passe. Si il est à 0.5, seulement la moitié passe.
+
+\subsection{Informations}
+\begin{description}
+\item[Taux] filtre
+\end{description}
+
+\subsection{Actions}
+\begin{description}
+\item[Modifier] le taux de filtre
+\end{description}
+
+\subsection{Logiciel}
+%\begin{itemize}
+%\end{itemize}
+Vide
+
+\section{Node graphique}
+Ce type de node a toute les caractéristiques qu'à le node de base.
+
+Ce node correspond a un élément graphique déssinable.
+
+Il possède une texture matricielle. Cette texture est chargé grâce à un gestionnaire de texture permettant d'éviter les doublons.
+L'affichage se fait par couche de profondeur. Cela permet de placer les éléments le plus éloigné d'abord permettant ensuite de placer les éléments au premier plan qui vont recouvrir les autres. Une autre approche serait d'utiliser un masque d'affichage avec un rendu dans l'autre sens : du plus proche au plus éloigné. Seul les pixels n'ayant pas été modifié se plaque sur l'écran et si le masque est totalement plein, alors le rendu est terminé. Meme si il reste des éléments derrière, c'est sur qu'ils ne seront pas affichés\footnote{Test à faire pour vérifié qu'elle technique est plus rentable}.
+
+\subsection{Informations}
+\begin{description}
+\item[Texture] texture matricielle
+\end{description}
+
+\subsection{Actions}
+\begin{description}
+\item[Modifier] la texture
+\end{description}
+
+\subsection{Logiciel}
+%\begin{itemize}
+%\end{itemize}
+Vide
+
+\section{Node physique}
+Ce type de node a toute les caractéristiques qu'à le node de base.
+
+Ce node correspond à un élément physique avec une masse, une intertie, une vitesse, une accélèration.
+Celui-ci est représenté par un carré à la base. Cependant plusieurs nodes peuvent fusionner pour former un élément physique plus complexe.
+Ce node correspond a un élément graphique déssinable.
+
+\subsection{Informations}
+\begin{description}
+\item[Masse] masse
+\item[Distance / Temps] vitesse
+\item[Distance / Temps$^2$] acceleration
+\end{description}
+
+\subsection{Actions}
+\begin{description}
+\item[Modifier] la masse\footnote{a voir si on peut modifier dynamiquement la masse où si elle est constante}
+\item[Modifier] la vitesse
+\item[Modifier] l'accélèration
+\item[Appliquer] une force
+\item[Appliquer] une fusion entre deux nodes physique
+\end{description}
+
+\subsection{Logiciel}
+%\begin{itemize}
+%\end{itemize}
+Vide
+
+\end{document}
