@@ -250,4 +250,33 @@ Ce node correspond a un élément graphique déssinable.
 %\end{itemize}
 Vide
 
+\section{Manageur de scène}
+Le manageur de scène contient le node racine du graphe de scène. Il permet également d'ajouter des nodes dans le graphe.
+
+Il donne la possibilité de rechercher un node soit par son ID, soit par sa position.
+La recherche par ID se fait en parcourant le graphe de scène.
+La recherche par position est optimisé grâce à l'utilisation d'un quadtree.
+
+Il permet également de définir le node de fenetre de vision actif\footnote{C'est celui qui servira de fenetre} ainsi que la couleur de la lumière ambiante.
+
+\subsection{Informations}
+\begin{description}
+\item[Node] racine du graphe de scène
+\item[Quadtree] quadtree
+\item[Node de fenetre de vision] node actif
+\end{description}
+
+\subsection{Actions}
+\begin{description}
+\item[Ajouter] un node
+\item[Rechercher] un node par ID
+\item[Rechercher] un node par position
+\item[Modifier] le node de fenetre de vision actif
+\item[Modifier] la lumière ambiante
+\end{description}
+
+\subsection{Logiciel}
+%\begin{itemize}
+%\end{itemize}
+Vide
 \end{document}
