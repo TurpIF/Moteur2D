@@ -1,6 +1,7 @@
 # List of all tests
 set(MOTEUR2D_TESTS
-    ""
+    "node"
+    "png"
     )
 
 # Add all defined tests

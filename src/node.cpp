@@ -6,79 +6,65 @@
 
 #include "node.h"
 
-namespace scene {
-    node::node():
+namespace Scene {
+    Node::id_type Node::s_current_id = id_type(0);
+
+    Node::Node(string_type const & __n, ptr_node_type const & __p):
+        _id(s_current_id),
+        _name(__n),
         _local_transform(1.0),
-        _parent(nullptr),
-        _child(),
-        _mutex()
+        _parent(__p),
+        _child()
     {
+        s_current_id++;
     }
 
-    node::~node() {
-        _mutex.lock();
+    Node::~Node() {
         for(auto it = _child.begin() ; it != _child.end() ; it++)
             delete *it;
-        _mutex.unlock();
     }
 
-    void node::apply(transform_type const & __t) {
-        _mutex.lock();
+    Node::id_type const & Node::id() const {
+        auto const & r = _id;
+        return r;
+    }
+
+    Node::string_type const & Node::name() const {
+        auto const & r = _name;
+        return r;
+    }
+
+    void Node::apply(transform_type const & __t) {
         _local_transform *= __t;
-        _mutex.unlock();
     }
 
-    void node::apply(rotation_type const & __a) {
-        _mutex.lock();
+    void Node::apply(rotation_type const & __a) {
         _local_transform = glm::rotate(_local_transform,
                 __a, glm::vec3(0.0, 0.0, 1.0));
-        _mutex.unlock();
     }
 
-    void node::apply(translation_type const & __v) {
-        _mutex.lock();
+    void Node::apply(translation_type const & __v) {
         _local_transform = glm::translate(_local_transform, __v);
-        _mutex.unlock();
     }
 
-    void node::apply(scale_type const & __s) {
-        _mutex.lock();
+    void Node::apply(scale_type const & __s) {
         _local_transform = glm::scale(_local_transform,
                 glm::vec3(__s.x, __s.y, 1.0));
-        _mutex.unlock();
     }
 
-    node::node_set_type const & node::child() const {
-        _mutex.lock();
-        auto const & r = _child;
-        _mutex.unlock();
-        return r;
+    Node::node_set_type const & Node::child() const {
+        return _child;
     }
 
-    node::ptr_node_type const & node::parent() const {
-        _mutex.lock();
-        auto const & r = _parent;
-        _mutex.unlock();
-        return r;
+    Node::ptr_node_type const & Node::parent() const {
+        return _parent;
     }
 
-    void node::parent(ptr_node_type const & __p) {
-        _mutex.lock();
+    void Node::parent(ptr_node_type const & __p) {
         _parent = __p;
-        _mutex.unlock();
     }
 
-    void node::remove_parent() {
-        _mutex.lock();
+    void Node::remove_parent() {
         _parent = nullptr;
-        _mutex.unlock();
-    }
-
-    void node::lock() const {
-        _mutex.lock();
-    }
-
-    void node::unlock() const {
-        _mutex.unlock();
     }
 }

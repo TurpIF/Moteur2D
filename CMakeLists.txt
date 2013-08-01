@@ -30,13 +30,14 @@ set(MOTEUR2D_LIB "MOTEUR2D_lib")
 add_library(${MOTEUR2D_LIB} ${MOTEUR2D_SOURCES})
 
 # OpenGL
-INCLUDE(FindOpenGL)
- 
-# Déclaration des chemins vers les entêtes OpenGL
-INCLUDE_DIRECTORIES(${OPENGL_INCLUDE_DIR})
- 
-# On link notre projet avec les libs OpenGL
-TARGET_LINK_LIBRARIES( ${MOTEUR2D_LIB} ${OPENGL_LIBRARIES})
+include(FindOpenGL)
+include_directories(${OPENGL_INCLUDE_DIR})
+target_link_libraries(${MOTEUR2D_LIB} ${OPENGL_LIBRARIES})
+
+# lib PNG
+find_package(PNG REQUIRED)
+include_directories(${PNG_INCLUDE_DIR})
+target_link_libraries(${MOTEUR2D_LIB} ${PNG_LIBRARY})
 
 # CTags target
 set(CTAGS_TARGET_NAME "tags")
