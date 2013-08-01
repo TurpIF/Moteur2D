@@ -31,6 +31,7 @@ add_library(${MOTEUR2D_LIB} ${MOTEUR2D_SOURCES})
 
 # OpenGL
 include(FindOpenGL)
+# find_package(OpenGL)
 include_directories(${OPENGL_INCLUDE_DIR})
 target_link_libraries(${MOTEUR2D_LIB} ${OPENGL_LIBRARIES})
 
@@ -38,6 +39,11 @@ target_link_libraries(${MOTEUR2D_LIB} ${OPENGL_LIBRARIES})
 find_package(PNG REQUIRED)
 include_directories(${PNG_INCLUDE_DIR})
 target_link_libraries(${MOTEUR2D_LIB} ${PNG_LIBRARY})
+
+# GLUT
+find_package(GLUT)
+include_directories(${GLUT_INCLUDE_DIR})
+target_link_libraries(${MOTEUR2D_LIB} ${GLUT_LIBRARIES})
 
 # CTags target
 set(CTAGS_TARGET_NAME "tags")
