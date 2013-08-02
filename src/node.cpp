@@ -1,5 +1,5 @@
 #define GLM_SWIZZLE
-#define GLM_FORCE_RADIANS
+// #define GLM_FORCE_RADIANS
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -17,6 +17,9 @@ namespace Scene {
         _child()
     {
         s_current_id++;
+
+        if(_parent != nullptr)
+            _parent->_child.insert(this);
     }
 
     Node::~Node() {
@@ -25,13 +28,11 @@ namespace Scene {
     }
 
     Node::id_type const & Node::id() const {
-        auto const & r = _id;
-        return r;
+        return _id;
     }
 
     Node::string_type const & Node::name() const {
-        auto const & r = _name;
-        return r;
+        return _name;
     }
 
     void Node::apply(transform_type const & __t) {
@@ -61,10 +62,33 @@ namespace Scene {
     }
 
     void Node::parent(ptr_node_type const & __p) {
+        if(_parent != nullptr)
+            _parent->_child.erase(this);
+        if(__p != nullptr)
+            __p->_child.insert(this);
+
         _parent = __p;
     }
 
     void Node::remove_parent() {
+        if(_parent != nullptr)
+            _parent->_child.erase(this);
         _parent = nullptr;
+    }
+
+    bool Node::is_drawn(transform_type const &,
+            rectangle_type const &) const
+    {
+        // TODO
+        return true;
+    }
+
+    void Node::draw_all(transform_type __t, rectangle_type const & __r) const {
+        transform_type t = _local_transform * __t;
+        draw(t);
+        for(auto const & c : _child) {
+            if(c->is_drawn(t, __r))
+                c->draw_all(t, __r);
+        }
     }
 }

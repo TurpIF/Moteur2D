@@ -23,6 +23,8 @@ namespace Scene {
             void camera(ptr_camera_type const &);
 
         protected:
+            virtual void draw(transform_type const &) const = 0;
+
             ptr_camera_type _camera;
     };
 }

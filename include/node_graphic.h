@@ -14,11 +14,13 @@ namespace Scene {
                     ptr_node_type const & = nullptr);
             virtual ~Graphic();
 
-            texture_type const & texture() const;
-            void texture(texture_type const &);
+            ptr_texture_type const & texture() const;
+            void texture(ptr_texture_type const &);
 
         protected:
-            texture_type _texture;
+            virtual void draw(transform_type const &) const;
+
+            ptr_texture_type _texture;
     };
 }
 

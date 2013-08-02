@@ -18,4 +18,8 @@ namespace Scene {
     void Camera::focal(scalaire_type const & __f) {
         _focal = __f;
     }
+
+    void Camera::draw(transform_type const &) const {
+        return;
+    }
 }

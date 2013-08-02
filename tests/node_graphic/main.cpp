@@ -1,25 +1,20 @@
-#include "texture.h"
+#include "node_graphic.h"
 
 #include <iostream>
 #include <GL/glu.h>
 #include <GL/glut.h>
 
+Scene::Node * root_node = nullptr;
+
 static void draw(void) {
+    if(root_node == nullptr)
+        return;
+
     glClearColor(0.0, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
 
     glEnable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, 2);
-    glBegin(GL_POLYGON);
-    glTexCoord2f(1.0f, 1.0f);
-    glVertex3f(1.0f, 1.0f, 0.0f);
-    glTexCoord2f(0.0f, 1.0f);
-    glVertex3f(-1.0f, 1.0f, 0.0f);
-    glTexCoord2f(0.0f, 0.0f);
-    glVertex3f(-1.0f, -1.0f, 0.0f);
-    glTexCoord2f(1.0f, 0.0f);
-    glVertex3f(1.0f, -1.0f, 0.0f);
-    glEnd();
+    root_node->draw_all(Scene::Node::transform_type(), Scene::Node::rectangle_type(0, 0, 1024, 768));
     glDisable(GL_TEXTURE_2D);
 
     glutSwapBuffers();
@@ -44,25 +39,21 @@ int main(int argc, char ** argv) {
     // glDepthFunc(GL_LEQUAL);
     // glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
-    for(unsigned int i = 0 ; i < 10 ; i++)
-    {
-        {
-            Texture t("test.png");
-            std::cout
-                << "; id : " << t.id()
-                << "; wi : " << t.width()
-                << "; he : " << t.height()
-                << std::endl;
-        }
-        {
-            Texture t("test2.png");
-            std::cout
-                << "; id : " << t.id()
-                << "; wi : " << t.width()
-                << "; he : " << t.height()
-                << std::endl;
-        }
-    }
+    Scene::Graphic * g = new Scene::Graphic("root");
+    g->texture(new Texture("./test.png"));
+    g->apply(Scene::Node::translation_type(-0.1, -0.1, 0));
+    g->apply(Scene::Node::rotation_type(30));
+    root_node = g;
+
+    Scene::Graphic * g2 = new Scene::Graphic("child1", root_node);
+    g2->texture(new Texture("./test2.png"));
+    g2->apply(Scene::Node::translation_type(-0.1, -0.1, 0));
+    g2->apply(Scene::Node::rotation_type(30));
+
+    Scene::Graphic * g3 = new Scene::Graphic("child2", g2);
+    g3->texture(new Texture("./test3.png"));
+    g3->apply(Scene::Node::translation_type(-0.1, -0.1, 0));
+    g3->apply(Scene::Node::rotation_type(30));
 
     glutDisplayFunc(draw);
     glutMainLoop();

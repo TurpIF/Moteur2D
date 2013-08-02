@@ -18,6 +18,8 @@ namespace Scene {
             void focal(scalaire_type const &);
 
         protected:
+            virtual void draw(transform_type const &) const;
+
             scalaire_type   _focal;
     };
 }

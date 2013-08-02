@@ -20,4 +20,8 @@ namespace Scene {
     void Window::camera(ptr_camera_type const & __c) {
         _camera = __c;
     }
+
+    void Window::draw(transform_type const &) const {
+        return;
+    }
 }

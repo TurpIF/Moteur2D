@@ -5,6 +5,8 @@
 #include <string>
 #include <glm/glm.hpp>
 
+#include "texture.h"
+
 namespace Scene {
     class Node {
         public:
@@ -16,7 +18,8 @@ namespace Scene {
             typedef glm::vec3 translation_type;
             typedef glm::vec2 scale_type;
             typedef glm::mediump_float scalaire_type;
-            typedef void * texture_type;
+            typedef glm::vec4 rectangle_type;
+            typedef Texture * ptr_texture_type;
 
             typedef Node * ptr_node_type;
             typedef std::set<ptr_node_type> node_set_type;
@@ -45,7 +48,14 @@ namespace Scene {
             void parent(ptr_node_type const &);
             void remove_parent();
 
+            bool is_drawn(transform_type const &,
+                    rectangle_type const &) const;
+
+            void draw_all(transform_type, rectangle_type const &) const;
+
         protected:
+            virtual void draw(transform_type const &) const = 0;
+
             static id_type s_current_id;
 
             id_type         _id;
