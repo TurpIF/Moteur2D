@@ -84,11 +84,14 @@ namespace Scene {
     }
 
     void Node::draw_all(transform_type __t, rectangle_type const & __r) const {
-        transform_type t = _local_transform * __t;
+        transform_type t = __t * _local_transform;
         draw(t);
         for(auto const & c : _child) {
             if(c->is_drawn(t, __r))
                 c->draw_all(t, __r);
         }
+    }
+
+    void Node::draw(transform_type const &) const {
     }
 }

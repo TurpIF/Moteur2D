@@ -10,16 +10,17 @@
 namespace Scene {
     class Node {
         public:
-            typedef unsigned int id_type;
-            typedef std::string string_type;
+            typedef unsigned int        id_type;
+            typedef std::string         string_type;
 
-            typedef glm::mat4 transform_type;
-            typedef glm::mediump_float rotation_type;
-            typedef glm::vec3 translation_type;
-            typedef glm::vec2 scale_type;
-            typedef glm::mediump_float scalaire_type;
-            typedef glm::vec4 rectangle_type;
-            typedef Texture * ptr_texture_type;
+            typedef float               dim_type;
+            typedef glm::mat4           transform_type;
+            typedef glm::mediump_float  rotation_type;
+            typedef glm::vec3           translation_type;
+            typedef glm::vec2           scale_type;
+            typedef glm::mediump_float  scalaire_type;
+            typedef glm::vec4           rectangle_type;
+            typedef Texture *           ptr_texture_type;
 
             typedef Node * ptr_node_type;
             typedef std::set<ptr_node_type> node_set_type;
@@ -54,7 +55,7 @@ namespace Scene {
             void draw_all(transform_type, rectangle_type const &) const;
 
         protected:
-            virtual void draw(transform_type const &) const = 0;
+            virtual void draw(transform_type const &) const;
 
             static id_type s_current_id;
 

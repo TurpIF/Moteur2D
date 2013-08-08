@@ -18,6 +18,7 @@ class Texture {
 
     public:
         struct file_buffer {
+            // TODO RAII (init and delete with constr/destr)
             typedef unsigned char byte;
             typedef std::size_t size_type;
 
@@ -27,11 +28,13 @@ class Texture {
             size_type       offset;
         };
 
+        enum class image_type {png, bmp};
+
         Texture(Texture &&) = default;
         Texture(Texture const &) = default;
         Texture & operator=(Texture const &) = default;
 
-        Texture(filename_type const &);
+        Texture(filename_type const &, image_type const & = image_type::png);
 
         id_type const & id() const;
         dim_type const & width() const;
@@ -39,6 +42,7 @@ class Texture {
 
     protected:
         struct gl_texture_type {
+            // TODO RAII (init and delete with constr/destr)
             dim_type                width;
             dim_type                height;
             format_type             format;
@@ -48,6 +52,7 @@ class Texture {
 
         static file_buffer read_file(filename_type const &);
         static gl_texture_type const read_png(file_buffer);
+        static gl_texture_type const read_bmp(file_buffer);
 
     protected:
         id_type     _id;

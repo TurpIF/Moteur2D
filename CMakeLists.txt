@@ -20,6 +20,9 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DDEBUG")
 endif()
 
+# Custom cmake module path
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
+
 # Moteur2D include directory
 include_directories("include")
 
@@ -30,8 +33,8 @@ set(MOTEUR2D_LIB "MOTEUR2D_lib")
 add_library(${MOTEUR2D_LIB} ${MOTEUR2D_SOURCES})
 
 # OpenGL
-include(FindOpenGL)
-# find_package(OpenGL)
+# include(FindOpenGL)
+find_package(OpenGL)
 include_directories(${OPENGL_INCLUDE_DIR})
 target_link_libraries(${MOTEUR2D_LIB} ${OPENGL_LIBRARIES})
 
@@ -44,6 +47,16 @@ target_link_libraries(${MOTEUR2D_LIB} ${PNG_LIBRARY})
 find_package(GLUT)
 include_directories(${GLUT_INCLUDE_DIR})
 target_link_libraries(${MOTEUR2D_LIB} ${GLUT_LIBRARIES})
+
+# SOIL
+find_package(SOIL)
+include_directories(${SOIL_INCLUDE_DIR})
+target_link_libraries(${MOTEUR2D_LIB} ${SOIL_LIBRARIES})
+
+# GLM
+find_package(GLM)
+include_directories(${GLM_INCLUDE_DIR})
+target_link_libraries(${MOTEUR2D_LIB} ${GLM_LIBRARIES})
 
 # CTags target
 set(CTAGS_TARGET_NAME "tags")

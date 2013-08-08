@@ -2,6 +2,7 @@
 
 #include <GL/gl.h>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace Scene {
     Graphic::Graphic(string_type const & __s,
@@ -26,7 +27,14 @@ namespace Scene {
         if(_texture == nullptr)
             return;
 
-        glLoadMatrixf(glm::value_ptr(__t));
+        transform_type t = __t * glm::scale(glm::mat4(),
+                glm::vec3(_texture->width(), _texture->height(), 1.0f));
+
+        glLoadMatrixf(glm::value_ptr(t));
+
+        // Alpha blending
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
         glBindTexture(GL_TEXTURE_2D, _texture->id());
         glBegin(GL_POLYGON);
         glTexCoord2f(0.0f, 0.0f);

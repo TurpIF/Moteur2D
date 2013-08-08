@@ -3,6 +3,7 @@ set(MOTEUR2D_TESTS
     # "node"
     "png"
     "node_graphic"
+    "node_light"
     )
 
 # Add all defined tests

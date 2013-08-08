@@ -1,38 +1,62 @@
 #include "texture.h"
 
 #include <png.h>
+#include <SOIL/SOIL.h>
 #include <fstream>
 #include <algorithm>
 #include <stdexcept>
 
-Texture::Texture(filename_type const & __f):
+Texture::Texture(filename_type const & __f, image_type const &):
     _id(0),
     _width(0),
     _height(0)
 {
-    try {
-        gl_texture_type t(read_png(read_file(__f)));
-        _width = t.width;
-        _height = t.height;
+    int ch = 0;
+    int width = 0;
+    int height = 0;
+    unsigned char * img = SOIL_load_image(__f.c_str(), &width, &height, &ch, SOIL_LOAD_AUTO);
+    if(img == NULL)
+        throw std::runtime_error("Could not load image : \"" + __f + "\"");
 
-        glGenTextures(1, &_id);
-        glBindTexture(GL_TEXTURE_2D, _id);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexImage2D(GL_TEXTURE_2D, 0, t.internal_format, _width, _height,
-                0, t.format, GL_UNSIGNED_BYTE, t.texels);
+    _width = static_cast<dim_type>(width);
+    _height = static_cast<dim_type>(height);
 
-        delete t.texels;
-    }
-    catch(std::fstream::failure) {
-        throw;
-    }
-    catch(std::bad_alloc) {
-        throw;
-    }
-    catch(std::runtime_error) {
-        throw;
-    }
+    _id = SOIL_create_OGL_texture(img, _width, _height, ch, SOIL_CREATE_NEW_ID,
+            SOIL_FLAG_MIPMAPS | SOIL_FLAG_TEXTURE_REPEATS | SOIL_FLAG_INVERT_Y);
+    SOIL_free_image_data(img);
+
+    if(_id == 0)
+        throw std::runtime_error("Could not load image : \"" + __f + "\"");
+
+    // try {
+    //     gl_texture_type t(
+    //             __i == image_type::png
+    //             ? read_png(read_file(__f))
+    //             : read_bmp(read_file(__f))
+    //             );
+
+    //     _width = t.width;
+    //     _height = t.height;
+
+    //     glGenTextures(1, &_id);
+    //     glBindTexture(GL_TEXTURE_2D, _id);
+    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    //     glTexImage2D(GL_TEXTURE_2D, 0, t.internal_format, _width, _height,
+    //             0, t.format, GL_UNSIGNED_BYTE, t.texels);
+
+    //     delete t.texels;
+    //     t.texels = nullptr;
+    // }
+    // catch(std::fstream::failure) {
+    //     throw;
+    // }
+    // catch(std::bad_alloc) {
+    //     throw;
+    // }
+    // catch(std::runtime_error) {
+    //     throw;
+    // }
 }
 
 Texture::id_type const & Texture::id() const {
@@ -107,8 +131,6 @@ Texture::gl_texture_type const Texture::read_png(Texture::file_buffer __fb) {
 
     if(setjmp(png_jmpbuf(png_ptr))) {
         png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
-        if(tex.texels != nullptr)
-            delete [] tex.texels;
 
         if(row_pointers != nullptr)
             delete [] row_pointers;
@@ -127,7 +149,7 @@ Texture::gl_texture_type const Texture::read_png(Texture::file_buffer __fb) {
     if(color_type == PNG_COLOR_TYPE_PALETTE)
         png_set_palette_to_rgb(png_ptr);
     if(color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)
-        png_set_gray_1_2_4_to_8(png_ptr);
+        png_set_expand_gray_1_2_4_to_8(png_ptr);
     if(png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS))
         png_set_tRNS_to_alpha(png_ptr);
 
@@ -196,3 +218,33 @@ Texture::gl_texture_type const Texture::read_png(Texture::file_buffer __fb) {
 
     return tex;
 }
+
+Texture::gl_texture_type const Texture::read_bmp(Texture::file_buffer __fb) {
+    if(__fb.length < 54
+            || __fb.data[0] != 'B'
+            || __fb.data[1] != 'M'
+            || *reinterpret_cast<int *>(&__fb.data[0x1E]) != 0
+            || *reinterpret_cast<int *>(&__fb.data[0x1C]) != 24)
+        throw std::runtime_error("Not a correct bmp file.");
+
+    gl_texture_type tex;
+
+    int data_pos = *reinterpret_cast<int *>(&__fb.data[0x0A]);
+    int img_size = *reinterpret_cast<int *>(&__fb.data[0x22]);
+    tex.width = *reinterpret_cast<int *>(&__fb.data[0x12]);
+    tex.height = *reinterpret_cast<int *>(&__fb.data[0x16]);
+
+    if(img_size == 0)
+        img_size = tex.width * tex.height * 3;
+    if(data_pos == 0)
+        data_pos = 54;
+
+    tex.texels = new texel_type[img_size];
+    std::copy_n(__fb.data + data_pos, img_size, tex.texels);
+
+    tex.format = GL_BGR;
+    tex.internal_format = 3;
+
+    return tex;
+}
+
