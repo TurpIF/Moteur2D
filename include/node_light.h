@@ -3,11 +3,13 @@
 
 #include "node.h"
 
+#include "type.h"
+
 namespace Scene {
     class Light: public Node {
         public:
             typedef float intensity_type;
-            typedef std::size_t quality_type;
+            typedef numeric<std::size_t> quality_type;
 
             struct color_type {
                 float r;

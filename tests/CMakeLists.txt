@@ -2,6 +2,7 @@
 set(MOTEUR2D_TESTS
     # "node"
     "png"
+    "numeric"
     "node_graphic"
     "node_light"
     )
